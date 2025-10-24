@@ -1,0 +1,31 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: "eu-west-1"        # change if needed
+    S3_BUCKET: "static-site-poc-<your-unique-suffix>"  # replace with your unique bucket name
+phases:
+  install:
+    commands:
+      - echo "Install phase - nothing to install for static site"
+  pre_build:
+    commands:
+      - echo "Pre-build: getting commit id"
+      - COMMIT_ID=${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}
+      - echo "Commit: $COMMIT_ID"
+  build:
+    commands:
+      - echo "Preparing output directory"
+      - mkdir -p output
+      - cp index.html output/index.html
+      - sed -i "s/{{COMMIT}}/$COMMIT_ID/g" output/index.html
+  post_build:
+    commands:
+      - echo "Syncing to S3 bucket: $S3_BUCKET"
+      - aws s3 sync output/ s3://$S3_BUCKET/ --region $AWS_REGION --delete
+      - echo "Setting index document metadata (optional)"
+      - aws s3 cp s3://$S3_BUCKET/index.html s3://$S3_BUCKET/index.html --region $AWS_REGION --metadata-directive REPLACE --content-type text/html
+artifacts:
+  files:
+    - '**/*'
+  base-directory: output
