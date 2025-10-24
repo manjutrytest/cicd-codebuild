@@ -22,6 +22,4 @@ jobs:
           aws-region: eu-west-1
 
       - name: Start CodeBuild project
-        run: |
-          echo "Triggering CodeBuild: cicd-codebuild-static"
-          aws codebuild start-build --project-name cicd-codebuild-static
+        run: aws codebuild start-build --project-name cicd-codebuild-static
